@@ -9,10 +9,18 @@ router.param('id', tourController.checkID);
 
 router.route('/')
     .get(tourController.getAllTours)
-    .post(tourController.createTour);
-    router.route('/:id')
+    .post(tourController.checkBody, tourController.createTour); // Use middlewre before one particular method
+
+router.route('/:id')
     .get(tourController.getTour)
     .patch(tourController.updateTour)
     .delete(tourController.deleteTour);
 
 module.exports = router; // if there is only one thing to export
+
+/*
+{
+	"name": "Test Tour",
+	"duration": 10
+}
+*/

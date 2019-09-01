@@ -2,6 +2,18 @@ const fs = require('fs');
 
 const tours = JSON.parse(fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`));  // Because only execute once
 
+// Middleware for check the body
+exports.checkBody = (req, res, next) => {
+    console.log(`checkBody ${req.body}`);
+    if(!req.body.name || !req.body.duration){
+        return res.status(400).json({
+            status: 'fail',
+            message: 'It missing parameters'
+        });
+    }
+    next();
+};
+
 // Middleware for the expecific parameter, filter for the tour doesnt exist
 exports.checkID = (req, res, next, val) => {
     //console.log(`The ID is: ${val}`);
@@ -9,7 +21,7 @@ exports.checkID = (req, res, next, val) => {
     const id = req.params.id * 1; // Convert string to a number
 
     if (id > tours.length) {
-        return res.status(404).send({
+        return res.status(404).json({
             status: 'fail',
             message: 'Invalid ID'
         });

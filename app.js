@@ -6,10 +6,17 @@ const userRouter = require('./routes/userRoutes');
 
 const app = express();
 
-
 // TODO: 1) MIDDLEWARES
-app.use(morgan('dev'));
+//console.log(`App: ${process.env.PORT}`);
+if(process.env.NODE_ENV === 'development'){
+    app.use(morgan('dev'));
+}
+
 app.use(express.json()); // Middleware -> Parse data from the body
+
+// Open to the browser from the folder and no from the route 
+//app.use(express.static(`${__dirname}/public`)); 
+// http://localhost:3000/overview.html
 
 // Declaration of our own middleware (next Function to execute)
 app.use((req, res, next) => {
