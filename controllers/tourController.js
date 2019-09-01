@@ -2,7 +2,22 @@ const fs = require('fs');
 
 const tours = JSON.parse(fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`));  // Because only execute once
 
-//export. export more than one thing
+// Middleware for the expecific parameter, filter for the tour doesnt exist
+exports.checkID = (req, res, next, val) => {
+    //console.log(`The ID is: ${val}`);
+
+    const id = req.params.id * 1; // Convert string to a number
+
+    if (id > tours.length) {
+        return res.status(404).send({
+            status: 'fail',
+            message: 'Invalid ID'
+        });
+    }
+    next();
+};
+
+// export. export more than one thing
 exports.getAllTours = (req, res) => {    // v1 -> Version Api
     //console.log(req.requestTime);
 
@@ -16,23 +31,16 @@ exports.getAllTours = (req, res) => {    // v1 -> Version Api
     });
 };
 
-exports.getTour = (req, res) => {    // :id parameter  -   :id? optional parameter    
-    const id = req.params.id * 1; // Convert string to a number
+exports.getTour = (req, res) => {    // :id parameter  -   :id? optional parameter  
+    const id = req.params.id * 1;
     const tour = tours.find(el => el.id == id);
 
-    if (!tour) {
-        return res.status(404).send({
-            status: 'fail',
-            message: 'Invalid ID'
-        });
-    } else {
-        res.status(200).json({
-            status: 'success',
-            data: {
-                tour
-            }
-        });
-    }
+    res.status(200).json({
+        status: 'success',
+        data: {
+            tour
+        }
+    });
 };
 
 exports.createTour = (req, res) => {
@@ -51,36 +59,17 @@ exports.createTour = (req, res) => {
 };
 
 exports.updateTour = (req, res) => {
-    const id = req.params.id * 1; // Convert string to a number
-
-    if (id > tours.length) {
-        return res.status(404).send({
-            status: 'fail',
-            message: 'Invalid ID'
-        });
-    } else {
-        res.status(200).json({
-            status: 'success',
-            data: {
-                tour: '<Udapte tour here...>'
-            }
-        });
-    }
+    res.status(200).json({
+        status: 'success',
+        data: {
+            tour: '<Udapte tour here...>'
+        }
+    });
 };
 
 exports.deleteTour = (req, res) => {
-    const id = req.params.id * 1; // Convert string to a number
-
-    if (id > tours.length) {
-        return res.status(404).send({
-            status: 'fail',
-            message: 'Invalid ID'
-        });
-    } else {
-        res.status(204).json({
-            status: 'success',
-            data: null
-        });
-    }
+    res.status(204).json({
+        status: 'success',
+        data: null
+    });
 };
-

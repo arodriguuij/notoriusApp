@@ -14,9 +14,7 @@ app.use(express.json()); // Middleware -> Parse data from the body
 // Declaration of our own middleware (next Function to execute)
 app.use((req, res, next) => {
     console.log('Hello from the middleware¡');
-    next();
-});
-app.use((req, res, next) => {
+
     // Add attribute to the request
     req.requestTime = new Date().toISOString();
     next();
