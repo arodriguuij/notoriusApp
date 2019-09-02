@@ -1,17 +1,26 @@
 const Tour = require('../models/tourModel');
 
+exports.aliasTopTours = (req, res, next) => {
+    console.log('Middleware alias top5-cheap');
+
+    req.query.limit = '5';
+    req.query.sort = 'price,-ratingAverage,';
+    req.query.fields = 'name,price,ratingAverage,summary,difficulty'
+    next();
+};
+
 // export. export more than one thing
 exports.getAllTours = async (req, res) => {    // v1 -> Version Api
     try{
 
         //BUILD QUERY
-        //  1A) Filtering
+        //  TODO: 1A) Filtering
         const queryObj = {...req.query}; //structuring --> '...'  new object --> '{}'
-        //console.log(queryObj);
+        console.log(queryObj);
         const excludeFields = ['page', 'sort', 'limit', 'fields'];
         excludeFields.forEach(el => delete queryObj[el]);
 
-        //  1B) Advance filtering
+        //  TODO: 1B) Advance filtering
         // 127.0.0.1:3000/api/v1/tours?duration[gte]=5&difficulty=easy&sort=3&limit=10
         let queryStr = JSON.stringify(queryObj);
 
@@ -24,16 +33,39 @@ exports.getAllTours = async (req, res) => {    // v1 -> Version Api
         // Transforming in a query to make aviable do more stuff
         let query = Tour.find(JSON.parse(queryStr));
 
-        //  2)Sorting
+        //  TODO: 2)Sorting
         // 127.0.0.1:3000/api/v1/tours?sort=price   Ascendent order
         // 127.0.0.1:3000/api/v1/tours?sort=-price,-ratingAverage  Descendent order and with second criteria
         if(req.query.sort){
             const sortBy = req.query.sort.split(',').join(' '); // Delete "," and separate by space
+            console.log(sortBy);
             query = query.sort(sortBy); // query.sort('-price -ratingAverage')
         } else {
             query = query.sort('-createdAt');  //Default
         }
 
+        //  TODO: 3) Field limiting
+        // 127.0.0.1:3000/api/v1/tours?fields=name,duration,difficulty,price
+        if(req.query.fields) {
+            const fields = req.query.fields.split(',').join(' ');
+            query = query.select(fields);
+        } else {
+            // Exclude key      "__v": 0
+            query = query.select('-__v');  // exclude "-" + key
+        }
+
+        //  TODO: 4) Pagination
+        const page = req.query.page * 1 || 1; // Convert string to number and default 1
+        const limit = req.query.limit * 1 || 100;
+        const skip = (page - 1) * limit;
+
+        query = query.skip(skip).limit(limit);
+
+        // Avoid the posibility to get page that doesnt exist
+        if(req.query.page){
+            const numTours = await Tour.countDocuments(); //Number of documents
+            if(skip >= numTours) throw new Error('This page doest not exist!');  // Move on to the catch block
+        }
 
         //EXECUTE THE QUERY
         const tours = await query;

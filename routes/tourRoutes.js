@@ -7,6 +7,8 @@ const router = express.Router();
 // Middleware for the expecific parameter
 //router.param('id', tourController.checkID);
 
+router.route('/top5-cheap').get(tourController.aliasTopTours ,tourController.getAllTours);
+
 router.route('/')
     .get(tourController.getAllTours)
     //.post(tourController.checkBody, tourController.createTour); // Use middlewre before one particular method
