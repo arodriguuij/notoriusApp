@@ -3,7 +3,42 @@ const Tour = require('../models/tourModel');
 // export. export more than one thing
 exports.getAllTours = async (req, res) => {    // v1 -> Version Api
     try{
-        const tours = await Tour.find();
+
+        //BUILD QUERY
+        //  1A) Filtering
+        const queryObj = {...req.query}; //structuring --> '...'  new object --> '{}'
+        //console.log(queryObj);
+        const excludeFields = ['page', 'sort', 'limit', 'fields'];
+        excludeFields.forEach(el => delete queryObj[el]);
+
+        //  1B) Advance filtering
+        // 127.0.0.1:3000/api/v1/tours?duration[gte]=5&difficulty=easy&sort=3&limit=10
+        let queryStr = JSON.stringify(queryObj);
+
+        // gte, gt, lte, lt  ----> $gte, $gt, $lte, $lt
+        // "\b" only the exact string, no more
+        // "g" replace everyone
+        queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`); 
+        //console.log(JSON.parse(queryStr));
+
+        // Transforming in a query to make aviable do more stuff
+        let query = Tour.find(JSON.parse(queryStr));
+
+        //  2)Sorting
+        // 127.0.0.1:3000/api/v1/tours?sort=price   Ascendent order
+        // 127.0.0.1:3000/api/v1/tours?sort=-price,-ratingAverage  Descendent order and with second criteria
+        if(req.query.sort){
+            const sortBy = req.query.sort.split(',').join(' '); // Delete "," and separate by space
+            query = query.sort(sortBy); // query.sort('-price -ratingAverage')
+        } else {
+            query = query.sort('-createdAt');  //Default
+        }
+
+
+        //EXECUTE THE QUERY
+        const tours = await query;
+
+        // SEND RESPONSE
         res.status(200).json({
             status: 'success',
             results: tours.length,
