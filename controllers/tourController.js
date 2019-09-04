@@ -172,3 +172,101 @@ exports.deleteTour = async (req, res) => {
         });
     }
 };
+
+// Agregation pipeline
+exports.getTourStats = async (req, res) => {
+    try{
+        const stat = await Tour.aggregate([
+             {
+                 $match: { ratingAverage: { $gte: 4.5 } }
+             },
+             {
+                 $group: {
+                   // _id: null, // all the tours togeter
+                    _id: { $toUpper: '$difficulty'},
+                    numTours: { $sum: 1 }, //Add 1 in each iteration
+                    numRatings: { $sum: '$ratingCuantity' },
+                    avgRating: { $avg: '$ratingAverage' },
+                    avgPrice: { $avg: '$price' },
+                    minPrice: { $min: '$price' },
+                    maxPrice: { $max: '$price' }
+                 },
+             },
+             {
+                 $sort: { avgPrice: 1 } //Sort by avgPrice
+             }
+            //  },
+            //  {
+            //      $match: { _id: { $ne: 'EASY' } } //Excluding EASY documents
+            //  }
+        ]);
+        res.status(200).json({
+            status: 'success',
+            data: {
+                stat
+            }
+        });
+    } catch (err){
+        res.status(400).json({
+            status: "fail",
+            message: 'Invalid data sent'
+        });
+    }
+}
+
+
+exports.getMonthlyPlan = async (req, res) => {
+    try{
+        const year = req.params.year * 1;
+
+        const plan = await Tour.aggregate([
+            //startDates
+            {
+                // Deconstruc an array field from the info documents and then output one document,
+                // for each element of the array.
+                $unwind: '$startDates' 
+            },
+            {
+                $match: { 
+                    startDates: {
+                        $gte: new Date(`${year}-01-01`),
+                        $lte: new Date(`${year}-12-31`)
+                    } 
+                }
+            },
+            {
+                $group: {
+                    _id: { $month: '$startDates' },
+                    numToursStarts: { $sum: 1 },
+                    tours: { $push: '$name' }
+                }
+            },
+            {
+                $addFields: { month: '$_id' }
+            },
+            {
+                $project: {
+                    _id: 0 //No project 0 - project 1
+                }
+            },
+            {
+                $sort: { numToursStarts: -1 } // -1 Descendin, 1 Ascending
+            },
+            {
+                $limit: 12 // Number of result
+            }
+        ]);
+        
+        res.status(200).json({
+            status: 'success',
+            data: {
+                plan
+            }
+        });
+    } catch(err){
+        res.status(400).json({
+            status: "fail",
+            message: 'Invalid data sent'
+        });
+    }
+}
