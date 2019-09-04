@@ -75,7 +75,8 @@ tourSchema.virtual('durationWeeks').get(function(){
 // The function will be called before and actual document is save to the DB
 tourSchema.pre('save', function(next){
      //console.log(this);
-     this.slug = slugify(this.name, { lower: true }); // Add new property (slug) to the document with slugify(property, opt)
+      // Add new property (slug) to the document with slugify(property, opt)
+     this.slug = slugify(this.name, { lower: true });  // This = current document
      next(); // If there is more middleware in the stack
 });
 
@@ -115,6 +116,14 @@ tourSchema.post(/^find/, function(docs, next){
     next();
 });
 
+
+// AGGREGATION MIDDLEWARE
+// Fixed the problem of use the secrect tour in the statistics with the aggregates pipelane
+tourSchema.pre('aggregate', function(next){
+    //console.log(this.pipeline());  // this : Current aggregation object
+    this.pipeline().unshift({ $match: { secretTour: { $ne: true } } }); //.unshift() at the begining of the array
+    next();
+});
 
 const Tour = mongoose.model('Tour', tourSchema);
 
