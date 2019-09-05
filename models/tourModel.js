@@ -1,12 +1,16 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
+const validator = require('validator');
 
 const tourSchema = mongoose.Schema({
     name: {
         type: String,
         required: [true, 'A tour must have a name'],
         unique: true,
-        trim: true
+        trim: true,
+        maxlength: [40, 'A tour name must have lest or equal 40 characters'],  // Validator only aviable on the string
+        minlength: [10, 'A tour name must have more or equal 10 characters']  // Validator
+        //validate: [validator.isAlpha, 'A tour name must only countains characters']  // Not used due to doest allow spaces
     },
     duration: {
         type: Number,
@@ -18,11 +22,17 @@ const tourSchema = mongoose.Schema({
     },
     difficulty: {
         type: String,
-        required: [true, 'A tour must have a difficulty']
+        required: [true, 'A tour must have a difficulty'],
+        enum: {
+            values: ['easy', 'medium', 'difficult'],
+            message: 'Difficulty is either: easy, medium or difficult'
+        }
     },
     ratingAverage: {
         type: Number,
-        default: 4.5
+        default: 4.5,
+        min: [1, 'A rating must be above 1.0'],  // Only valid to Numbers and Dates
+        max: [5, 'A rating must be below 5.0']
     },
     ratingCuantity: {
         type: Number,
@@ -32,7 +42,17 @@ const tourSchema = mongoose.Schema({
         type: Number,
         required: [true, 'A tour must have a price']
     },
-    discount: Number,
+    priceDiscount: {
+        type: Number,
+        validate: {
+            validator: function(value){
+                // this --> Only when we are creating new documents, not when we are updating
+                return value < this.price;  // The priceDiscount cannot be greater than price
+            },
+            message: 'Discount price ({VALUE}) should be below regular price' //{VALUE} has acess to the value
+        }
+         
+    },
     summary: {
         type: String,
         trim: true,  // Delete all the spaces at the begining and the finish
@@ -71,7 +91,7 @@ tourSchema.virtual('durationWeeks').get(function(){
 });
 
 
-// TODO: DOCUMENT MIDDLEWARE: run before .save() and .create() "mongoose method"
+// TODO: DOCUMENT MIDDLEWARE: run before .save() and .create() "mongoose method", not for .update()
 // The function will be called before and actual document is save to the DB
 tourSchema.pre('save', function(next){
      //console.log(this);
