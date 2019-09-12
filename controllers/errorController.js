@@ -60,8 +60,10 @@ module.exports = (err, req, res, next) => {
     err.status = err.status || 'error';
 
     if (process.env.NODE_ENV === 'development') {
+        console.log('DEV');
         sendErrorDev(err, res);
     } else if (process.env.NODE_ENV === 'production') {
+        console.log('PROD');
         let error = { ...err }; // Destructuring
 
         if (err.name === 'CastError') {  // 127.0.0.1:3000/api/v1/tours/dfsdfsdf
