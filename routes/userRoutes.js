@@ -9,7 +9,7 @@ router.post('/signup', autenticationController.signup);
 router.post('/login', autenticationController.login);
 
 router.route('/')
-    .get(getAllUsers)
+    .get(autenticationController.protect, getAllUsers)
     .post(createUser);
     
 router.route('/:id')
