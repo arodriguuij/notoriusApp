@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
+const User = require('./userModel');
 //const validator = require('validator');
 
 const tourSchema = mongoose.Schema({
@@ -51,7 +52,6 @@ const tourSchema = mongoose.Schema({
             },
             message: 'Discount price ({VALUE}) should be below regular price' //{VALUE} has acess to the value
         }
-         
     },
     summary: {
         type: String,
@@ -77,7 +77,32 @@ const tourSchema = mongoose.Schema({
     secretTour: {
         type: Boolean,
         default: false
-    }
+    },
+    startLocation:{
+        // GeoJSON
+        type: {
+            type: String,
+            default: 'Point',
+            enum: ['Point']
+        },
+        coordinates: [Number],
+        address: String,
+        description: String
+    },
+    locations: [ // Embedded documents
+        {
+            type: {
+                type: String,
+                default: 'Point',
+                enum: ['Point']
+            },
+            coordinates: [Number],
+            address: String,
+            description: String,
+            day: Number
+        }
+    ],
+    guides: Array
 }, {
     toJSON: { virtuals: true }, //get output as a JSON
     toObject: { virtuals: true }   //get output as a Object
@@ -98,6 +123,12 @@ tourSchema.pre('save', function(next){
       // Add new property (slug) to the document with slugify(property, opt)
      this.slug = slugify(this.name, { lower: true });  // This = current document
      next(); // If there is more middleware in the stack
+});
+
+tourSchema.pre('save', async function(next){ // Only work for create new documents, no for update
+    const guidesPromises = this.guides.map(async id => await User.findById(id));
+    this.guides = await Promise.all(guidesPromises); // In order to wait until everyone guidesPromises from  User.findById(id) is done
+    next();
 });
 
 /* We can have more than 1 pre middelware for the same action (save in this case)
