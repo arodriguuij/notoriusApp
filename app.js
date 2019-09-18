@@ -10,6 +10,7 @@ const hpp = require('hpp');
 const tourRouter = require('./routes/tourRoutes');
 const globalErrorHandler = require('./controllers/errorController');
 const userRouter = require('./routes/userRoutes');
+const reviewRouter = require('./routes/reviewRoutes');
 
 const app = express();
 
@@ -52,7 +53,7 @@ app.use(xss()); //Clean html symbols injection
 // Prevent parameter pollution
 app.use(hpp({
     // whitelist -> Array for which we actually allow duplicates in the query string.
-    whitelist: [ 'duration', 'ratingAverage', 'ratingCuantity', 'maxGroupSize', 'difficulty', 'price']
+    whitelist: [ 'duration', 'ratingsAverage', 'ratingCuantity', 'maxGroupSize', 'difficulty', 'price']
 }));
 // Example: {{URL}}api/v1/tours?sort=duration&sort=price  -> Sort by 2 different types -> Solution: useing the lastone
 
@@ -77,6 +78,7 @@ app.use((req, res, next) => {
 // TODO: 2) ROUTES
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
+app.use('/api/v1/reviews', reviewRouter);
 
 
 // Defaults routes

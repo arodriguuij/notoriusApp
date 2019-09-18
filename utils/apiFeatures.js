@@ -32,13 +32,13 @@ class APIFeatures {
 
   sort() {
       // 127.0.0.1:3000/api/v1/tours?sort=price   Ascendent order
-      // 127.0.0.1:3000/api/v1/tours?sort=-price,-ratingAverage  Descendent order and with second criteria
-      console.log(this.queryString === true);
+      // 127.0.0.1:3000/api/v1/tours?sort=-price,-ratingsAverage  Descendent order and with second criteria
+      //console.log(this.queryString === true);
 
       if (this.queryString.sort) {
           const sortBy = this.queryString.sort.split(',').join(' '); // Delete "," and separate by space
           //console.log(sortBy);
-          this.query = this.query.sort(sortBy); // query.sort('-price -ratingAverage')
+          this.query = this.query.sort(sortBy); // query.sort('-price -ratingsAverage')
       } else {
           this.query = this.query.sort('-createdAt');  //Default
       }

@@ -1,97 +1,28 @@
 const Tour = require('../models/tourModel');
-const APIFeatures = require('../utils/apiFeatures');
 const catchAsync = require('../utils/catchAsync');
-const AppError = require('../utils/appError'); 
+const factory = require('./handleFactory');
 
 exports.aliasTopTours = (req, res, next) => {
     console.log('Middleware alias top5-cheap');
 
     req.query.limit = '5';
-    req.query.sort = 'price,-ratingAverage,';
-    req.query.fields = 'name,price,ratingAverage,summary,difficulty'
+    req.query.sort = 'price,-ratingsAverage,';
+    req.query.fields = 'name,price,ratingsAverage,summary,difficulty'
     next();
 };
 
 // export. export more than one thing
-exports.getAllTours = catchAsync(async (req, res, next) => {    // v1 -> Version Api
-    //EXECUTE THE QUERY
-    //It works because we return the object itself
-    console.log(req.query);
-    const features = new APIFeatures(Tour.find(), req.query).filter().sort().limitFields().pagination();
-    const tours = await features.query;
-    // SEND RESPONSE
-    res.status(200).json({
-        status: 'success',
-        results: tours.length,
-        data: {
-            tours
-        }
-    });
-});
-
-exports.getTour = catchAsync(async (req, res, next) => {    // :id parameter  -   :id? optional parameter  
-    // Mogoose Way
-    const tour = await Tour.findById(req.params.id);
-    // MongBD way :Tour.findOne({ _id: req.params.id})
-
-    if(!tour) {
-        return next(new AppError('No tour found with that ID', 404)); // return in orden to no continue executing the rest code
-    }
-
-    res.status(200).json({
-        status: 'success',
-        data: {
-            tour
-        }
-    });
-});
-
-exports.createTour = catchAsync(async (req, res, next) => {
-    const newTour = await Tour.create(req.body);
-    res.status(201).json({
-        status: "success",
-        data: {
-            tour: newTour
-        }
-    });
-});
-
-exports.updateTour = catchAsync(async (req, res, next) => {
-    const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
-        new: true, // Return the modificated document
-        runValidators: true // Run de validator again
-    });
-
-    if(!tour) {
-        return next(new AppError('No tour found with that ID', 404)); // return in orden to no continue executing the rest code
-    }
-
-    res.status(200).json({
-        status: 'success',
-        data: {
-            tour
-        }
-    });
-});
-
-exports.deleteTour = catchAsync(async (req, res, next) => {
-    const tour = await Tour.findByIdAndRemove(req.params.id);
-
-    if(!tour) {
-        return next(new AppError('No tour found with that ID', 404)); // return in orden to no continue executing the rest code
-    }
-
-    res.status(204).json({
-        status: 'success',
-        data: null
-    });
-});
+exports.getAllTours = factory.getAll(Tour);
+exports.getTour = factory.getOne(Tour, {path: 'reviews'});
+exports.createTour = factory.createOne(Tour);
+exports.updateTour= factory.updateOne(Tour);
+exports.deleteTour = factory.deleteOne(Tour);
 
 // Agregation pipeline
 exports.getTourStats = catchAsync(async (req, res, next) => {
     const stat = await Tour.aggregate([
         {
-            $match: { ratingAverage: { $gte: 4.5 } }
+            $match: { ratingsAverage: { $gte: 4.5 } }
         },
         {
             $group: {
@@ -99,7 +30,7 @@ exports.getTourStats = catchAsync(async (req, res, next) => {
                 _id: { $toUpper: '$difficulty' },
                 numTours: { $sum: 1 }, //Add 1 in each iteration
                 numRatings: { $sum: '$ratingCuantity' },
-                avgRating: { $avg: '$ratingAverage' },
+                avgRating: { $avg: '$ratingsAverage' },
                 avgPrice: { $avg: '$price' },
                 minPrice: { $min: '$price' },
                 maxPrice: { $max: '$price' }
