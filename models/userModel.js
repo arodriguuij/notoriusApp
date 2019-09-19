@@ -51,7 +51,7 @@ const userSchema = mongoose.Schema({
 });
 
 // TODO: Comment the next 2 middleware (save) when we read users.json in order to sent to the DB. Becasuse the password are already encrypted
-
+/*
 // The encryption gonna be happen between the moment that we receive that data and 
 // the moment where it is actually persisted to the database
 userSchema.pre('save', async function (next) {
@@ -74,7 +74,7 @@ userSchema.pre('save', function (next) {
     this.passwordChangedAt = Date.now() - 1000;
     next();
 });
-
+*/
 userSchema.pre(/^find/, function (next) { // /^find/... every query that start by 'find'
     // This point to the current query
     this.find({ active: { $ne: false } });

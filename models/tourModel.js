@@ -13,6 +13,7 @@ const tourSchema = mongoose.Schema({
         minlength: [10, 'A tour name must have more or equal 10 characters']  // Validator
         //validate: [validator.isAlpha, 'A tour name must only countains characters']  // Not used due to doest allow spaces
     },
+    slug: String,
     duration: {
         type: Number,
         required: [true, 'A tour must have a duration'],
@@ -33,7 +34,8 @@ const tourSchema = mongoose.Schema({
         type: Number,
         default: 4.5,
         min: [1, 'A rating must be above 1.0'],  // Only valid to Numbers and Dates
-        max: [5, 'A rating must be below 5.0']
+        max: [5, 'A rating must be below 5.0'],
+        set: val => Math.round(val * 10) / 10  // Each time that set a new value
     },
     ratingCuantity: {
         type: Number,
@@ -89,7 +91,7 @@ const tourSchema = mongoose.Schema({
         address: String,
         description: String
     },
-    locations: [ // Embedded documents
+    locations: [// Embedded documents
         {
             type: {
                 type: String,
@@ -120,7 +122,8 @@ const tourSchema = mongoose.Schema({
 
 // Create index in order to make the querys faster
 tourSchema.index({ price: 1, ratingsAverage: -1 }); // 1: ascending order      -1: descending order
-tourSchema.index({ slug: 1 })
+tourSchema.index({ slug: 1 });
+tourSchema.index({ startLocation: '2dsphere' });
 
 // Use a regular function in order to be able to use "this"
 // this --> pinted at the current document
@@ -201,12 +204,13 @@ tourSchema.post(/^find/, function (docs, next) {
 
 // AGGREGATION MIDDLEWARE
 // Fixed the problem of use the secrect tour in the statistics with the aggregates pipelane
+/*
 tourSchema.pre('aggregate', function (next) {
     //console.log(this.pipeline());  // this : Current aggregation object
     this.pipeline().unshift({ $match: { secretTour: { $ne: true } } }); //.unshift() at the begining of the array
     next();
 });
-
+*/
 const Tour = mongoose.model('Tour', tourSchema);
 
 module.exports = Tour;
