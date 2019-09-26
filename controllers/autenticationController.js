@@ -18,7 +18,7 @@ const createSentToken = (user, statusCode, res) => {
     const cookieOptions = {
         // * 24 * 60 * 60 * 1000 converting to milisecond 
         // secure: true -> Cookie only be send on an encypted connection (HTTPS)
-        // httpOnly: true -> Cookie cannot be accessedor modified in any way by the browser 
+        // httpOnly: true -> Cookie cannot be accessed or modified in any way by the browser 
         expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000),
         httpOnly: true
     };
@@ -31,7 +31,7 @@ const createSentToken = (user, statusCode, res) => {
 
     // Remove the password from the output
     user.password = undefined;
-    
+
     res.status(statusCode).json({
         status: 'success',
         token,
@@ -67,6 +67,15 @@ exports.login = catchAsync(async (req, res, next) => {
     createSentToken(user, 200, res);
 });
 
+exports.logout = (req, res) => {
+    res.cookie('jwt', 'loggedout', {
+        expires: new Date(Date.now() + 10 * 1000), // 10 seconds
+        httpOnly: true
+    });
+    res.status(200).json({
+        status: 'success'
+    });
+};
 
 exports.protect = catchAsync(async (req, res, next) => {
     // 1) TODO: Getting token and check if it is there
@@ -74,6 +83,8 @@ exports.protect = catchAsync(async (req, res, next) => {
 
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         token = req.headers.authorization.split(' ')[1];
+    } else if (req.cookies && req.cookies.jwt) {
+        token = req.cookies.jwt;
     }
     // token =
     // eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
@@ -104,8 +115,44 @@ exports.protect = catchAsync(async (req, res, next) => {
 
     // Grant access to protected route, Example: in restrictTo, because it is execute after this methed
     req.user = currentUser;
+    res.locals.user = currentUser; // Pug template will have access to the response .locals -> Passing data into a template
     next();
 });
+
+// Only for render pages, no errors
+exports.isLoggedIn = async(req, res, next) => {
+    if (req.cookies && req.cookies.jwt) {
+        try {
+            // 1) verify token
+            // Remove 'catchAsync' to dotnt send the error down  to all global error handling middleware, 
+            // because 'jwt.verify' verify the cookie jwt that we give the value 'loggedout' in order to log out the user.
+            // Solution: catch it locally
+            const decoded = await promisify(jwt.verify)(
+                req.cookies.jwt,
+                process.env.JWT_SECRET
+            );
+
+            // 2) TODO: Check if user still exists
+            const currentUser = await User.findById(decoded.id);
+            if (!currentUser) {
+                return next();
+            }
+
+            // 3) TODO: Check if user change password after the token was issued (emited)
+            if (currentUser.changesPasswordAfter(decoded.iat)) {
+                return next();
+            }
+
+            // There is a logged in User
+            res.locals.user = currentUser; // Pug template will have access to the response .locals -> Passing data into a template
+            return next();
+        } catch(err) {
+            return next();
+        }
+    }
+    next();
+};
+
 
 exports.restrictTo = (...roles) => { //wrap into a function in order to have access to the parameters
     return (req, res, next) => {
@@ -187,7 +234,7 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
     // 2) Check if POST current password is correct
     // user.password -> Actual password
     // req.body.passwordConfirm -> New password
-    if (!user || !(await user.correctPassword(req.body.passwordCurrent, user.password))) {
+    if (!(await user.correctPassword(req.body.passwordCurrent, user.password))) {
         return next(new AppError('Your current password is wrong.', 401));
     }
 
