@@ -2,6 +2,68 @@ const Tour = require('../models/tourModel');
 const catchAsync = require('../utils/catchAsync');
 const factory = require('./handleFactory');
 const AppError = require('../utils/appError');
+const multer = require('multer');
+const sharp = require('sharp');
+
+// Sve in memory
+const multerStorage = multer.memoryStorage();
+
+// Validate if the file is a image -> disponible in req.file.buffer
+const multerFilter = (req, file, cb) => {
+    if (file.mimetype.startsWith('image')) {
+        cb(null, true);
+    } else {
+        cb(new AppError('Not an image! Please upload only images.', 400), false);
+    }
+};
+
+const upload = multer({
+    storage: multerStorage,
+    fileFilter: multerFilter
+});
+
+exports.uploadTourImages = upload.fields([ // Mix single and multiple
+    { name: 'imageCover', maxCount: 1 },
+    { name: 'images', maxCount: 3 }
+]);
+//upload.single('image'); // Single
+//upload.array('images', 5); // Multiple with the same name
+
+exports.resizeTourImages = catchAsync(async (req, res, next) => {
+    if (!req.files.imageCover || !req.files.images) return next();
+
+    // 1) Cover image
+    req.body.imageCover = `tour-${req.params.id}-${Date.now()}-cover.jpeg`;
+    await sharp(req.files.imageCover[0].buffer)
+        .resize(2000, 1333)
+        .toFormat('jpeg')
+        .jpeg({ quality: 90 })
+        .toFile(`public/img/tours/${req.body.imageCover}`); // Save in disk
+
+    // 2) Images
+    req.body.images = [];
+
+    /*req.files.images.forEach(async(file, index) => {  });*/  // Problem with async inside of forEach, that doest avoid calling 'next()' -> Sution .map()
+
+    // Map -> Save an array of all of these promises. And then we can use Promise.all to await for all of them 
+    await Promise.all(req.files.images.map(async(file, index) => {
+        const fileName = `tour-${req.params.id}-${Date.now()}-${index + 1}.jpeg`;
+
+        await sharp(file.buffer)
+        .resize(2000, 1333)
+        .toFormat('jpeg')
+        .jpeg({ quality: 90 })
+        .toFile(`public/img/tours/${fileName}`); // Save in disk
+
+        req.body.images.push(fileName);
+    }));
+
+    console.log(req.body);  
+    next();
+});
+
+
+
 
 exports.aliasTopTours = (req, res, next) => {
     console.log('Middleware alias top5-cheap');

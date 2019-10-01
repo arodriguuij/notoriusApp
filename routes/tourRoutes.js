@@ -27,7 +27,11 @@ router.route('/')
 
 router.route('/:id')
     .get(tourController.getTour)
-    .patch(autenticationController.protect, autenticationController.restrictTo('admin', 'lead-guide'), tourController.updateTour)
+    .patch(autenticationController.protect, 
+        autenticationController.restrictTo('admin', 'lead-guide'), 
+        tourController.uploadTourImages,
+        tourController.resizeTourImages,
+        tourController.updateTour)
     .delete(autenticationController.protect, autenticationController.restrictTo('admin', 'lead-guide'), tourController.deleteTour);
 
 module.exports = router; // if there is only one thing to export
