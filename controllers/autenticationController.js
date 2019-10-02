@@ -24,7 +24,7 @@ const createSentToken = (user, statusCode, res) => {
     };
 
     if (process.env.NODE_ENV === 'production') {
-        cookieOptions.secure = true;
+        //cookieOptions.secure = true;
     }
 
     res.cookie('jwt', token, cookieOptions);
@@ -44,7 +44,7 @@ const createSentToken = (user, statusCode, res) => {
 exports.signup = catchAsync(async (req, res, next) => {
     const newUser = await User.create(req.body);
     const url = `${req.protocol}://${req.get('host')}/me`;
-    console.log(url);
+    //console.log(url);
     await new Email(newUser, url).sendWellcome();
     // process.env.JWT_SECRET -> secret key
     // Options: JWT_EXPIRES_IN
@@ -61,7 +61,7 @@ exports.login = catchAsync(async (req, res, next) => {
     // 2) Check if user exist && password is correct
     // .select('+password'); in order to select the "no selected password" -> +
     const user = await User.findOne({ email: email }).select('+password');
-    console.log(user);
+    //console.log(user);
     if (!user || ! await user.correctPassword(password, user.password)) {
         return next(new AppError('Incorrect email or password', 401));
     }
@@ -237,7 +237,7 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
     // 3) If so, update password
     user.password = req.body.password;
     user.passwordConfirm = req.body.passwordConfim;
-    console.log(user);
+    //console.log(user);
     await user.save();
     // we use .save() insted of .findByIdAndUpdate()   -> No use update for anything related with passwords
     // 1. Validation PasswordConfirm in model is going to work

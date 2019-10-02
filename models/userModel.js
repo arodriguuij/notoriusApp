@@ -37,7 +37,7 @@ const userSchema = mongoose.Schema({
         require: [true, 'Please confirm your password'], // Required input
         validate: { // TODO: This only work on CREATE and SAVE
             validator: function (el) {//We cannot use the arrow function because we need to use disk keyword
-                console.log(el, this.password);
+                //console.log(el, this.password);
                 return el === this.password;
             },
             message: 'The password must be the same'
@@ -102,7 +102,7 @@ userSchema.methods.createPasswordResetToken = function () {
     const resetToken = crypto.randomBytes(32).toString('hex');
 
     this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-    console.log({ resetToken }, this.passwordResetToken);
+    //console.log({ resetToken }, this.passwordResetToken);
 
     // The user is modificated but it needs to be saved afeter this method
     this.passwordResetExpires = Date.now() + 10 * 60 * 1000;  //10 * 60 * 1000 -> 10 minutes

@@ -19,7 +19,8 @@ if (mapBox) {
 }
 
 if (loginForm)
-    loginForm.addEventListener('submit', e => {
+loginForm.addEventListener('submit', e => {
+    //console.log('login')
         e.preventDefault();// To prevent load any other page
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;

@@ -15,7 +15,7 @@ const handleDuplicateField = err => {
 
 const handleValidationErrorDB = err => {
     const errors = Object.values(err.errors).map(el => el.message);
-    console.log(errors);
+    //console.log(errors);
     const message = `Invalid input data. ${errors.join('.  ')}`;
     return new AppError(message, 400);
 };
@@ -67,7 +67,7 @@ const sendErrorProd = (err, req, res) => {
     // B) RENDER WEBSITE    
     // A) Operational, trusted error: send message to client
     if (err.isOperational) {
-        console.log(err);
+        //console.log(err);
         return res.status(err.statusCode).render('error', {
             title: 'Something went wrong!',
             msg: err.message
@@ -90,10 +90,10 @@ module.exports = (err, req, res, next) => {
     err.status = err.status || 'error';
 
     if (process.env.NODE_ENV === 'development') {
-        console.log('DEV');
+        //console.log('DEV');
         sendErrorDev(err, req, res);
     } else if (process.env.NODE_ENV === 'production') {
-        console.log('PROD');
+        //console.log('PROD');
         let error = { ...err }; // Destructuring
         error.message = err.message;
 

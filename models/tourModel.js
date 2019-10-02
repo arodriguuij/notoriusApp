@@ -157,7 +157,7 @@ tourSchema.pre('save', async function(next){ // Only work for create new documen
 
 /* We can have more than 1 pre middelware for the same action (save in this case)
 tourSchema.pre('save', function(next){
-    console.log('Will save document...');
+    //console.log('Will save document...');
     next();
 });
 
@@ -194,13 +194,13 @@ tourSchema.pre(/^find/, function (next) {
     next();
 });
 
-
+/*
 tourSchema.post(/^find/, function (docs, next) {
-    console.log(`Query took ${Date.now() - this.start} milliseconds!`);
+    //console.log(`Query took ${Date.now() - this.start} milliseconds!`);
     //console.log(docs);
     next();
 });
-
+*/
 // AGGREGATION MIDDLEWARE
 // Fixed the problem of use the secrect tour in the statistics with the aggregates pipelane
 /*

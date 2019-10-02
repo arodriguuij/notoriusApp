@@ -8,6 +8,7 @@ const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
 const cookiesParse = require('cookie-parser');
+const compression = require('compression');
 
 const tourRouter = require('./routes/tourRoutes');
 const globalErrorHandler = require('./controllers/errorController');
@@ -72,6 +73,7 @@ app.use(hpp({
 }));
 // Example: {{URL}}api/v1/tours?sort=duration&sort=price  -> Sort by 2 different types -> Solution: useing the lastone
 
+app.use(compression());
 
 // TEST middleware
 // Declaration of our own middleware (next Function to execute)
@@ -107,7 +109,7 @@ app.all('*', (req, res, next) => {
 
     // Any parameter we use in the "next()" method, express is gonna reconize as a err,
     // Then, skip all the other middleware in the stack and send the error to the global error habdling middleware
-    next(new AppError(`Cannot find  ${req.originalUrl} on this server!`, 404));
+    //next(new AppError(`Cannot find  ${req.originalUrl} on this server!`, 404));
 });
 
 

@@ -58,7 +58,7 @@ exports.resizeTourImages = catchAsync(async (req, res, next) => {
         req.body.images.push(fileName);
     }));
 
-    console.log(req.body);  
+    //console.log(req.body);  
     next();
 });
 
@@ -66,7 +66,7 @@ exports.resizeTourImages = catchAsync(async (req, res, next) => {
 
 
 exports.aliasTopTours = (req, res, next) => {
-    console.log('Middleware alias top5-cheap');
+    //console.log('Middleware alias top5-cheap');
 
     req.query.limit = '5';
     req.query.sort = 'price,-ratingsAverage,';
@@ -204,7 +204,7 @@ exports.getDistances = catchAsync(async (req, res, next) => {
             )
         );
     }
-    console.log(lng, lat);
+    //console.log(lng, lat);
     const distances = await Tour.aggregate([
         {
             $geoNear: {
