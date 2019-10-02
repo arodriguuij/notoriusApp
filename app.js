@@ -9,6 +9,7 @@ const xss = require('xss-clean');
 const hpp = require('hpp');
 const cookiesParse = require('cookie-parser');
 const compression = require('compression');
+const cors = require('cors');
 
 const tourRouter = require('./routes/tourRoutes');
 const globalErrorHandler = require('./controllers/errorController');
@@ -25,6 +26,26 @@ app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'views'));
 
 // TODO: 1) GLOBAL MIDDLEWARES
+
+// Implement cors
+app.use(cors());
+// Access-Control-Allow-Origin *
+
+// api.natours.com, from: natours.com
+/*
+app.use(cors({
+    origin: 'https://www.natours.com'
+
+}));
+*/
+
+// http method to preflight phase (delete, path)
+app.options('*', cors());
+
+/*
+// Specific routes
+app.options('/api/v1/tours/:id', cors());
+*/
 
 // Open to the browser from the folder and no from the route 
 // Serving stativ files
