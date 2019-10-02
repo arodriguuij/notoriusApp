@@ -12,7 +12,7 @@ const signToken = id => {
     });
 };
 
-const createSentToken = (user, statusCode, res) => {
+const createSentToken = (user, statusCode, req, res) => {
     const token = signToken(user._id);
 
     const cookieOptions = {
@@ -20,13 +20,15 @@ const createSentToken = (user, statusCode, res) => {
         // secure: true -> Cookie only be send on an encypted connection (HTTPS)
         // httpOnly: true -> Cookie cannot be accessed or modified in any way by the browser 
         expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000),
-        httpOnly: true
+        httpOnly: true,
+        secure: (req.secure || req.headers('x-forwarded-proto')==='https')
+
     };
-
+/*
     if (process.env.NODE_ENV === 'production') {
-        //cookieOptions.secure = true;
+        cookieOptions.secure = true;
     }
-
+*/
     res.cookie('jwt', token, cookieOptions);
 
     // Remove the password from the output
@@ -48,7 +50,7 @@ exports.signup = catchAsync(async (req, res, next) => {
     await new Email(newUser, url).sendWellcome();
     // process.env.JWT_SECRET -> secret key
     // Options: JWT_EXPIRES_IN
-    createSentToken(newUser, 201, res);
+    createSentToken(newUser, 201, req, res);
 });
 
 exports.login = catchAsync(async (req, res, next) => {
@@ -66,7 +68,7 @@ exports.login = catchAsync(async (req, res, next) => {
         return next(new AppError('Incorrect email or password', 401));
     }
     // 3) If everything is ok, send token to client
-    createSentToken(user, 200, res);
+    createSentToken(user, 200, req, res);
 });
 
 exports.logout = (req, res) => {
@@ -220,7 +222,7 @@ exports.resertPassword = catchAsync(async (req, res, next) => {
     // This funcionality is done in the user middleware (Save)
 
     // 4) Log the user in, sent JWT
-    createSentToken(user, 200, res);
+    createSentToken(user, 200, req, res);
 });
 
 exports.updatePassword = catchAsync(async (req, res, next) => {
@@ -246,5 +248,5 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
     // 2.2. PasswordChangedAt timestamp would also not be set. (2nd middleware userModel)
 
     // 4) Log user in, send JWT
-    createSentToken(user, 200, res);
+    createSentToken(user, 200, req, res);
 });

@@ -18,6 +18,8 @@ const viewRouter = require('./routes/viewRoutes');
 
 const app = express();
 
+app.enable('trust proxy'); // IN der to 'req.headers('x-forwarded-proto')' working in atuenticationController - createToken
+
 // Set up the pack engine
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'views'));

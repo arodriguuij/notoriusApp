@@ -41,3 +41,11 @@ process.on('unhandledRejection', err => {
         process.exit(1); // 1 uncaught exception - 0 successful
     });
 });
+
+// Event received by heroky to satitaze the app each 24h (shutting down), its could be abrupt and shut down the app with request pending
+process.on('SIGTERM', () => {
+    console.log('SIGTERM RECEIVED. Shutting down gracefully.....');
+    server.close(() => {
+        console.log('Process terminated!')
+    });
+});
